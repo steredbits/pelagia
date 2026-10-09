@@ -46,14 +46,14 @@ jobs:
       - name: Cross-compilation and symbol check
         run: ./ci/build-ps5.sh
 
-      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           # Folder to copy to /data/homebrew/Pelagia (or use tools/deploy-ps5.sh); eboot.elf is stripped.
           name: Pelagia
           path: build-ps5/Pelagia/
           if-no-files-found: error
 
-      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           # Unstripped eboot.elf, to analyze a crash (the one above is stripped).
           name: pelagia-debug-symbols
