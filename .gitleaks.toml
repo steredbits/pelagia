@@ -1,0 +1,22 @@
+# gitleaks configuration (tools/scan-secrets.sh, "Secrets" CI job).
+title = "Pelagia"
+
+[extend]
+useDefault = true
+
+# Fake tokens and passwords used by the tests: they check that real ones
+# never leak (log masking, private session...). A finding is ignored only if it
+# is one of these exact values AND it is in the tests (condition = "AND",
+# gitleaks >= 8.25): the same value, or any other secret, anywhere else is
+# still detected.
+[[allowlists]]
+description = "Fake values used by the tests"
+condition = "AND"
+paths = [
+  '''^tests/''',
+]
+regexes = [
+  '''0123456789abcdef0123456789abcdef''',
+  '''abcdefghijklmnop0123456789''',
+  '''JetonTresSecret12345''',
+]

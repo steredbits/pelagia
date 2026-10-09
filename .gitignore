@@ -1,0 +1,15 @@
+# Build directories
+build-linux/
+build-ps5/
+build*/
+
+# Editor files
+.vscode/
+.idea/
+*.swp
+
+# Locally generated test media (never committed)
+*.mp4
+
+# Python
+__pycache__/

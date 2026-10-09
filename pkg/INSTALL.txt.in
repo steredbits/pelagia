@@ -1,0 +1,87 @@
+Pelagia @VERSION@ - unofficial Jellyfin client for PS5
+Pelagia - client Jellyfin non officiel pour PS5
+=====================================================
+
+Not affiliated with the Jellyfin project or Sony. For hardware you own.
+Non affilie au projet Jellyfin ni a Sony. Reserve a du materiel que vous possedez.
+Project / Projet : @REPO_URL@
+
+
+ENGLISH
+-------
+Tested with: PS5 firmware 13.60 (Relapse jailbreak), etaHEN, kstuff lite,
+ftpsrv, websrv, ShadowMountPlus, Jellyfin server 12.1.0. HTTP only for now.
+
+Install from a USB stick (easiest)
+  1. Use a USB stick formatted as exFAT.
+  2. Unzip this archive at the ROOT of the stick. You must get:
+         <stick>/homebrew/Pelagia/eboot.elf
+         <stick>/homebrew/Pelagia/sce_sys/icon0.png
+     (INSTALL.txt may be deleted from the stick.)
+  3. Plug the stick into the PS5, load your jailbreak setup so that websrv runs.
+  4. Open the websrv launcher and start "Pelagia".
+  Pelagia always stores its session, cache and logs in /data/homebrew/Pelagia/
+  on the console, never on the stick.
+
+Install over FTP (alternative)
+  Copy the homebrew/Pelagia folder to /data/homebrew/Pelagia/ on the console
+  (ftpsrv, port 2121), then start "Pelagia" from the websrv launcher.
+
+First start
+  Enter your Jellyfin server address (http://192.168.1.x:8096), your user name
+  and your password with the on-screen keyboard. To skip typing the address,
+  copy pelagia.conf.example to pelagia.conf (same folder) and edit "server=".
+  It is read from the stick first, then from /data/homebrew/Pelagia/.
+
+Controller: D-pad/left stick = move, Cross = select, Circle = back,
+  Triangle = play/pause, L1/R1 = -/+10 s, L2/R2 = -/+60 s, Options = menu.
+
+If something goes wrong
+  Logs are in /data/homebrew/Pelagia/logs/pelagia.log (read them over FTP).
+  The token and the password never appear in the logs.
+  Known limit: after "Quit", the screen may stay black; close the websrv
+  launcher by hand.
+
+Licence: GPL-3.0 or later (LICENSE). Third-party components: THIRD_PARTY_NOTICES.
+Jellyfin is a trademark of the Jellyfin project.
+
+
+FRANCAIS
+--------
+Teste avec : PS5 firmware 13.60 (jailbreak Relapse), etaHEN, kstuff lite,
+ftpsrv, websrv, ShadowMountPlus, serveur Jellyfin 12.1.0. HTTP seulement pour l'instant.
+
+Installation par cle USB (le plus simple)
+  1. Utilisez une cle USB formatee en exFAT.
+  2. Dezippez cette archive a la RACINE de la cle. Vous devez obtenir :
+         <cle>/homebrew/Pelagia/eboot.elf
+         <cle>/homebrew/Pelagia/sce_sys/icon0.png
+     (INSTALL.txt peut etre supprime de la cle.)
+  3. Branchez la cle sur la PS5 et chargez votre jailbreak pour que websrv tourne.
+  4. Ouvrez le lanceur websrv et lancez "Pelagia".
+  Pelagia range toujours sa session, son cache et ses logs dans
+  /data/homebrew/Pelagia/ sur la console, jamais sur la cle.
+
+Installation par FTP (autre possibilite)
+  Copiez le dossier homebrew/Pelagia dans /data/homebrew/Pelagia/ sur la console
+  (ftpsrv, port 2121), puis lancez "Pelagia" depuis le lanceur websrv.
+
+Premier lancement
+  Saisissez l'adresse de votre serveur Jellyfin (http://192.168.1.x:8096),
+  votre identifiant et votre mot de passe au clavier virtuel. Pour ne pas
+  saisir l'adresse, copiez pelagia.conf.example en pelagia.conf (meme dossier)
+  et editez "server=". Il est lu sur la cle d'abord, puis dans
+  /data/homebrew/Pelagia/.
+
+Manette : croix directionnelle / stick gauche = deplacer, Croix = valider,
+  Rond = retour, Triangle = lecture/pause, L1/R1 = -/+10 s, L2/R2 = -/+60 s,
+  Options = menu.
+
+En cas de probleme
+  Les logs sont dans /data/homebrew/Pelagia/logs/pelagia.log (a lire par FTP).
+  Le token et le mot de passe n'y apparaissent jamais.
+  Limite connue : apres "Quitter", l'ecran peut rester noir ; fermez le lanceur
+  websrv a la main.
+
+Licence : GPL-3.0 ou ulterieure (LICENSE). Composants tiers : THIRD_PARTY_NOTICES.
+Jellyfin est une marque du projet Jellyfin.
