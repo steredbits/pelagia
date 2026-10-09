@@ -1,0 +1,7 @@
+# Optional Pelagia pre-configuration (see README.md).
+# Copy to the console as pelagia.conf, in homebrew/Pelagia/ of the
+# USB stick (/mnt/usbN) or in /data/homebrew/Pelagia/ (tools/deploy-ps5.sh
+# --conf <file>); the stick is read before /data. A single key: server=.
+# Never credentials here: they are typed on the sign-in screen.
+# HTTP only for now (HTTPS planned).
+server=http://192.168.1.10:8096

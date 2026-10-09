@@ -1,0 +1,14 @@
+# Dependabot: keeps the GitHub Actions used by the workflows up to date.
+# Actions are pinned by commit SHA (see .github/workflows/): Dependabot proposes
+# the new SHA together with its version tag, as a pull request to review.
+version: 2
+updates:
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+    commit-message:
+      prefix: "CI"
+    labels:
+      - "dependencies"

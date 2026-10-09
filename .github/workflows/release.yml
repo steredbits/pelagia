@@ -1,0 +1,130 @@
+name: Release
+
+# On a vX.Y.Z tag (or vX.Y.Z-rc1): checks the version, reruns the Linux tests,
+# cross-compiles for the PS5, builds the zip ready for a USB stick
+# (homebrew/Pelagia/ + INSTALL.txt) and publishes the release.
+#   git tag v0.1.0 && git push origin v0.1.0
+on:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    name: Version and notes
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - name: The tag matches the CMake version and the CHANGELOG
+        run: ./tools/check-version.sh "${GITHUB_REF_NAME}"
+      - name: Release notes
+        run: |
+          VERSION="$(./tools/check-version.sh)"
+          {
+            echo "Pelagia ${GITHUB_REF_NAME} — unofficial Jellyfin client for PS5"
+            echo
+            python3 tools/changelog_section.py "$VERSION"
+            echo
+            echo "Unzip at the root of an exFAT USB stick (or copy \`homebrew/Pelagia\` to \`/data/homebrew/\` over FTP)."
+            echo "See INSTALL.txt in the zip, and the README. Pelagia is not affiliated with the Jellyfin project or Sony."
+            echo
+            echo "pelagia-debug-symbols.elf is the unstripped eboot.elf (symbols and debug information): it is only useful to analyze a crash, not to install Pelagia."
+          } > release-notes.md
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: release-notes
+          path: release-notes.md
+          if-no-files-found: error
+
+  test-linux:
+    name: Linux tests
+    needs: verify
+    runs-on: ubuntu-latest
+    env:
+      SDL_VIDEODRIVER: dummy
+      SDL_AUDIODRIVER: dummy
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - name: Dependencies
+        timeout-minutes: 5
+        run: |
+          ./ci/apt-install.sh libcurl4-openssl-dev \
+            libavformat-dev libavcodec-dev libswscale-dev \
+            libswresample-dev libavutil-dev \
+            libsdl2-dev ffmpeg python3
+      - name: Build and tests
+        run: ./ci/build-linux.sh
+
+  build-ps5:
+    name: PS5 application and zip
+    needs: verify
+    runs-on: ubuntu-24.04
+    env:
+      PS5_PAYLOAD_SDK: /opt/ps5-payload-sdk
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - name: Host tools (clang/lld/llvm 18, cmake)
+        timeout-minutes: 5
+        run: |
+          if command -v clang-18 && command -v ld.lld-18 && command -v llvm-config-18 \
+             && command -v cmake && command -v pkg-config; then
+            echo "Tools already installed"
+          else
+            ./ci/apt-install.sh clang-18 lld-18 llvm-18 cmake pkg-config
+          fi
+      - name: PacBrew archive cache
+        uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4
+        with:
+          path: ~/pacbrew/ps5-payload-dev.tar.gz
+          key: pacbrew-${{ hashFiles('ci/install-ps5-sdk.sh') }}
+      - name: Install the SDK and PacBrew
+        run: |
+          mkdir -p ~/pacbrew
+          PACBREW_ARCHIVE=~/pacbrew/ps5-payload-dev.tar.gz ./ci/install-ps5-sdk.sh /opt
+      - name: Cross-compilation and symbol check
+        run: ./ci/build-ps5.sh
+      - name: Release zip (homebrew/Pelagia/ + INSTALL.txt) and debug symbols
+        run: |
+          python3 tools/package_release.py \
+            --version "${GITHUB_REF_NAME#v}" \
+            --pkg-dir build-ps5/Pelagia \
+            --repo-url "${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}" \
+            --debug-elf build-ps5/debug/pelagia-debug-symbols.elf \
+            --out dist
+          unzip -l dist/Pelagia-*-ps5.zip
+          cat dist/SHA256SUMS
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: release-files
+          path: dist/
+          if-no-files-found: error
+
+  publish:
+    name: Publish
+    needs: [verify, test-linux, build-ps5]
+    runs-on: ubuntu-24.04
+    # The only job that writes: it creates the release.
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
+        with:
+          name: release-notes
+          path: notes
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
+        with:
+          name: release-files
+          path: dist
+      - name: Create the release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          PRE=""
+          case "${GITHUB_REF_NAME}" in *-*) PRE="--prerelease" ;; esac
+          gh release create "${GITHUB_REF_NAME}" dist/*.zip dist/SHA256SUMS dist/pelagia-debug-symbols.elf \
+            --repo "${GITHUB_REPOSITORY}" --verify-tag $PRE \
+            --title "Pelagia ${GITHUB_REF_NAME} — Jellyfin client for PS5" \
+            --notes-file notes/release-notes.md

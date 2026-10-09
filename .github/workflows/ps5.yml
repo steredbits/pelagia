@@ -1,0 +1,61 @@
+name: PS5
+
+# Cross-compilation of the application for the PS5. Build only:
+# nothing runs on a console. The PacBrew SDK (~350 MB) is cached
+# (cache key based on ci/install-ps5-sdk.sh).
+on:
+  push:
+  pull_request:
+
+# Read-only token for every job (fork pull requests included).
+permissions:
+  contents: read
+
+jobs:
+  build-ps5:
+    name: PS5 application (cross-compilation)
+    runs-on: ubuntu-24.04
+    env:
+      PS5_PAYLOAD_SDK: /opt/ps5-payload-sdk
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+
+      - name: Host tools (clang/lld/llvm 18, cmake)
+        # Usually already present on the ubuntu-24.04 image: apt only if
+        # something is missing (the apt mirror is sometimes silent, see ci/apt-install.sh).
+        timeout-minutes: 5
+        run: |
+          if command -v clang-18 && command -v ld.lld-18 && command -v llvm-config-18 \
+             && command -v cmake && command -v pkg-config; then
+            echo "Tools already installed"
+          else
+            ./ci/apt-install.sh clang-18 lld-18 llvm-18 cmake pkg-config
+          fi
+
+      - name: PacBrew archive cache
+        uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4
+        with:
+          path: ~/pacbrew/ps5-payload-dev.tar.gz
+          key: pacbrew-${{ hashFiles('ci/install-ps5-sdk.sh') }}
+
+      - name: Install the SDK and PacBrew
+        run: |
+          mkdir -p ~/pacbrew
+          PACBREW_ARCHIVE=~/pacbrew/ps5-payload-dev.tar.gz ./ci/install-ps5-sdk.sh /opt
+
+      - name: Cross-compilation and symbol check
+        run: ./ci/build-ps5.sh
+
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          # Folder to copy to /data/homebrew/Pelagia (or use tools/deploy-ps5.sh); eboot.elf is stripped.
+          name: Pelagia
+          path: build-ps5/Pelagia/
+          if-no-files-found: error
+
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          # Unstripped eboot.elf, to analyze a crash (the one above is stripped).
+          name: pelagia-debug-symbols
+          path: build-ps5/debug/pelagia-debug-symbols.elf
+          if-no-files-found: error
